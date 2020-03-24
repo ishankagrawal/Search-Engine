@@ -1,0 +1,2 @@
+This is the second document which is just made for testing the code
+It contains multiple lines
