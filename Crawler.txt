@@ -1,5 +1,0 @@
-import requests
-from bs4 import BeautifulSoup
-start_url = input()
-r = resquests.get(start_URL)
-print(r)

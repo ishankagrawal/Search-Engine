@@ -67,9 +67,7 @@ class Sengine:
                                     self.vocab[word].sort()
                             else:
                                 self.vocab[word] = [docid]
-                        print(docid)
-
-                               
+                                    
         return self.vocab
 
     def search(self,q,vocab):
@@ -82,7 +80,7 @@ class Sengine:
         if(res[list(res.keys())[0]]==1):
             return []
                 
-        
+        print(res)
         return list(res.keys())[::-1]
 
 class Crawler:
@@ -91,7 +89,6 @@ class Crawler:
         self.doclist = {}
         self.sitelist = {}
         self.vis = {}
-        self.pagelimit = 30
     def generateDocList(self):
         url_queue = deque()
         
@@ -99,9 +96,8 @@ class Crawler:
             url_queue.append(url)
 
         i=0
-        while(not url_queue or i<self.pagelimit):
+        while(not url_queue or i<20):
             i+=1
-            print(i)
             self.doclist["id" + str(i)] = ""
             self.sitelist["id" + str(i)] = ""
 
@@ -125,7 +121,7 @@ class Crawler:
                 elif(thisurl[0]=='/'):
                     thisurl  = cur_url+thisurl.strip('/')
 
-                elif(thisurl=="javascript:void(0)" or thisurl=="javascript:void(0);"):
+                elif(thisurl=="javascript:void(0)"):
                     thisurl = cur_url
                 if(thisurl not in self.vis):
                     url_queue.append(thisurl)
@@ -147,26 +143,22 @@ class Crawler:
 
         return self.doclist
 
-print("Loading web Data... please wait 50 seconds")
+
 cr = Crawler(["http://www.w3schools.com/"])
 doclist = cr.generateDocList()
 
 
 s = Sengine(doclist)  
-q = list(input("Enter the search query \n").split())
-print("Searching please wait..")
+q = list(input("Enter the search query").split())
 vocab = s.buildindex(doclist)
 res = s.search(q,vocab)
 
 if(len(res) == 0):
-    print("Sorry No result found")
+    print("Sorry No result")
 else:
-    j=0
-    print("Top 10 search result in ranked order are")
+    print("Search result in ranked order is")
     for docid in res:
-        if(j<10):
-            print(cr.sitelist[docid])
-            j+=1
+        print(cr.sitelist[docid])
         
         
         
