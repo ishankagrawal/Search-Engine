@@ -3,6 +3,27 @@ from bs4 import BeautifulSoup
 from collections import deque
 import os
 
+class Document:
+    def __init__(self):
+        self.length = 0
+        self.wordlist = {}
+
+    def doclength(self):
+        return self.length
+
+    def docfreq(self,word):
+        if(word in self.wordlist):
+            return self.wordlist[word]
+        return 0
+
+    def add(self,words):
+        self.length+=len(words.split())
+        for word in words.split():
+            if(word in self.wordlist):
+                self.wordlist[word]+=1
+            else:
+                self.wordlist[word] = 0
+
 class Sengine:
     
     def __init__(self,doclist):
@@ -11,19 +32,8 @@ class Sengine:
         self.dociter = 1
         self.freq = {}
 
-    def doclength(self,doc):
 
 
-            return len(doc.split())
-    
-    def docfreq(self,word,doc):
-            res = 0
-
-            doc = doc.split()
-            for w in doc:
-                if(w==word):
-                    res+=1
-            return res
     
     def qfreq(self,word,q):
         res = 0;
@@ -40,10 +50,10 @@ class Sengine:
             res[docid] = 1
         v = len(vocab)
         for docid in doclist:
-            for word in vocab:
+            for word in q:
                 fiq = self.qfreq(word,q)
-                fij = self.docfreq(word,doclist[docid])
-                dj = self.doclength(doclist[docid])
+                fij = doclist[docid].docfreq(word)
+                dj = doclist[docid].length
                 res[docid]*=((0.5+fij)/((0.5*v)+dj))**fiq
         
         return res
@@ -57,7 +67,7 @@ class Sengine:
 
         for docid in doclist:
 
-                        temp = list(doclist[docid].split())
+                        temp = list(doclist[docid].wordlist.keys())
                         for word in temp:
                             if(word in self.vocab.keys()):
        
@@ -67,7 +77,7 @@ class Sengine:
                                     self.vocab[word].sort()
                             else:
                                 self.vocab[word] = [docid]
-                        print(docid)
+                    
 
                                
         return self.vocab
@@ -91,7 +101,7 @@ class Crawler:
         self.doclist = {}
         self.sitelist = {}
         self.vis = {}
-        self.pagelimit = 30
+        self.pagelimit = 50
     def generateDocList(self):
         url_queue = deque()
         
@@ -102,7 +112,7 @@ class Crawler:
         while(not url_queue or i<self.pagelimit):
             i+=1
             print(i)
-            self.doclist["id" + str(i)] = ""
+            self.doclist["id" + str(i)] = Document()
             self.sitelist["id" + str(i)] = ""
 
             cur_url = str(url_queue.popleft())
@@ -129,26 +139,27 @@ class Crawler:
                     thisurl = cur_url
                 if(thisurl not in self.vis):
                     url_queue.append(thisurl)
-                self.doclist["id" + str(i)] += (" " + str(anchor.string))
+                self.doclist["id" + str(i)].add(str(anchor.string))
             for h1 in soup.find_all('h1'):
-                self.doclist["id" + str(i)] += (" " + str(h1.string))
+                self.doclist["id" + str(i)].add(str(h1.string))
             for h2 in soup.find_all('h2'):
-                self.doclist["id" + str(i)] += (" " + str(h2.string))
+                self.doclist["id" + str(i)].add(str(h2.string))
             for h3 in soup.find_all('h3'):
-                self.doclist["id" + str(i)] += (" " + str(h3.string))
+                self.doclist["id" + str(i)].add(str(h3.string))
             for h4 in soup.find_all('h4'):
-                self.doclist["id" + str(i)] += (" " + str(h4.string))
+                self.doclist["id" + str(i)].add(str(h4.string))
             for td in soup.find_all('td'):
-                self.doclist["id" + str(i)] += (" " + str(td.string))
+                self.doclist["id" + str(i)].add(str(td.string))
             for p in soup.find_all('p'):
-                self.doclist["id" + str(i)] += (" " + str(p.string))
+                self.doclist["id" + str(i)].add(str(p.string))
             for b in soup.find_all('button'):
-                self.doclist["id" + str(i)] += (" " + str(b.string))
+                self.doclist["id" + str(i)].add(str(b.string))
 
         return self.doclist
 
-print("Loading web Data... please wait 50 seconds")
+
 cr = Crawler(["http://www.w3schools.com/"])
+print("Loading web Data... please wait till " + str(cr.pagelimit))
 doclist = cr.generateDocList()
 
 
@@ -157,6 +168,7 @@ q = list(input("Enter the search query \n").split())
 print("Searching please wait..")
 vocab = s.buildindex(doclist)
 res = s.search(q,vocab)
+
 
 if(len(res) == 0):
     print("Sorry No result found")
